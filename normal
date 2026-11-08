@@ -1,0 +1,62 @@
+// ESP8266 Wemos D1 Mini-ի ոտիկների սահմանում
+const int TOUCH1_PIN = D1; // Touch 1 - Վառում է Կարմիրը
+const int TOUCH2_PIN = D2; // Touch 2 - Վառում է Կանաչը
+const int TOUCH3_PIN = D5; // Touch 3 - Անջատում է բոլորը
+
+const int RED_LED_PIN   = D6; // Կարմիր LED
+const int GREEN_LED_PIN = D7; // Կանաչ LED
+
+// 90 վայրկյանի թայմերի փոփոխականներ
+unsigned long lastActionTime = 0;    // Վերջին սեղմման ժամանակը
+const unsigned long TIMEOUT = 90000; // 90 վայրկյան (90,000 միլիվայրկյան)
+bool isTimerActive = false;          // Թայմերի ակտիվության status
+
+void setup() {
+  // Սենսորների ոտիկները որպես մուտք
+  pinMode(TOUCH1_PIN, INPUT);
+  pinMode(TOUCH2_PIN, INPUT);
+  pinMode(TOUCH3_PIN, INPUT);
+
+  // Լեդերի ոտիկները որպես ելք
+  pinMode(RED_LED_PIN, OUTPUT);
+  pinMode(GREEN_LED_PIN, OUTPUT);
+
+  // Սկզբնական վիճակ՝ երկու լեդերն էլ անջատված են
+  digitalWrite(RED_LED_PIN, LOW);
+  digitalWrite(GREEN_LED_PIN, LOW);
+}
+
+void loop() {
+  // Ստուգում ենք Touch 1-ը
+  if (digitalRead(TOUCH1_PIN) == HIGH) {
+    digitalWrite(RED_LED_PIN, HIGH);  // Կարմիրը վառվում է
+    digitalWrite(GREEN_LED_PIN, LOW); // Կանաչը անջատվում է
+
+    lastActionTime = millis(); // Ֆիքսում ենք սեղմման պահը
+    isTimerActive = true;      // Միացնում ենք 90վ թայմերը
+  }
+  // Ստուգում ենք Touch 2-ը
+  else if (digitalRead(TOUCH2_PIN) == HIGH) {
+    digitalWrite(RED_LED_PIN, LOW);   // Կարմիրը անջատվում է
+    digitalWrite(GREEN_LED_PIN, HIGH);// Կանաչը վառվում է
+
+    lastActionTime = millis(); // Ֆիքսում ենք սեղմման պահը
+    isTimerActive = true;      // Վերասկսում ենք 90վ թայմերը
+  }
+  // Ստուգում ենք Touch 3-ը
+  else if (digitalRead(TOUCH3_PIN) == HIGH) {
+    digitalWrite(RED_LED_PIN, LOW);   // Կարմիրը անջատվում է
+    digitalWrite(GREEN_LED_PIN, LOW);  // Կանաչը անջատվում է
+
+    isTimerActive = false;     // Անջատում ենք թայմերը
+  }
+
+  // 90 ՎԱՅՐԿՅԱՆԻ ԱՎՏՈՄԱՏ ԱՆՋԱՏՄԱՆ ՍՏՈՒԳՈՒՄ
+  if (isTimerActive && (millis() - lastActionTime >= TIMEOUT)) {
+    digitalWrite(RED_LED_PIN, LOW);
+    digitalWrite(GREEN_LED_PIN, LOW);
+    isTimerActive = false;     // Լեդերն անջատվելուց հետո կանգնեցնում ենք թայմերը
+  }
+
+  delay(50); // Ստաբիլ աշխատանքի համար փոքր դադար
+}
